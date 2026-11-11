@@ -26,5 +26,6 @@ jobs:
           # Usamos -e 'ssh -p TU_PUERTO' para rsync
           rsync -avz -e 'ssh -p ${{ secrets.SSH_PORT }}' --exclude='.git' ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/intervlas_mcp/
               
-          # Conectamos por SSH especificando el puerto -p
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /root/intervals_mcp && pip install -r requirements.txt && systemctl restart intervals-mcp"
+      - name: Restart Systemd Service on Remote Server
+        run: |
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /root/intervals_mcp && pip install --break-system-packages --root-user-action ignore -r requirements.txt && systemctl restart intervals_mcp"
