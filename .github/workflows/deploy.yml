@@ -1,17 +1,17 @@
-name: Deploy to Ubuntu Server
+name: Deploy Garmin MCP to Ubuntu Server
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup SSH
+      - name: Set up SSH Key
         uses: webfactory/ssh-agent@v0.9.0
         with:
           ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
@@ -21,11 +21,15 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -p ${{ secrets.SSH_PORT }} -H ${{ secrets.SERVER_IP }} >> ~/.ssh/known_hosts
 
-      - name: Deploy files and restart service
+      - name: Sync files to server via rsync
         run: |
-          # Usamos -e 'ssh -p TU_PUERTO' para rsync
-          rsync -avz -e 'ssh -p ${{ secrets.SSH_PORT }}' --exclude='.git' ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/intervlas_mcp/
-              
+          rsync -avz -e "ssh -p ${{ secrets.SSH_PORT }}" \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '__pycache__' \
+            --exclude 'garmin_mcp.db' \
+            ./ ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/root/intervals_mcp/
+
       - name: Restart Systemd Service on Remote Server
         run: |
-          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "cd /root/intervals_mcp && pip install --break-system-packages --root-user-action ignore -r requirements.txt && systemctl restart intervals_mcp"
+          ssh -p ${{ secrets.SSH_PORT }} ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} "systemctl restart intervals-mcp"
