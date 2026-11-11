@@ -1,4 +1,4 @@
-name: Deploy Garmin MCP to Ubuntu Server
+name: Deploy Intervals MCP to Ubuntu Server
 
 on:
   push:
